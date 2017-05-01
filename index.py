@@ -22,13 +22,16 @@ def propose_tracks(a):
     if length == 0:
         return reply_false()
     else:
-        for x in range(length):
-            artist_name = content['tracks']['items'][x]['album']['artists'][0]['name']
-            if (x == 3):
+        count = 0
+        num_artist = 0
+        while (count < length):
+            if (num_artist == 3):
                 break;
-            else:
-                if (artist_name not in array):
-                    array.append(artist_name)
+            artist_name = content['tracks']['items'][count]['album']['artists'][0]['name']
+            if (artist_name not in array):
+                array.append(artist_name)
+                num_artist += 1
+            count += 1
     return array
 
 
