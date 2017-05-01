@@ -2,7 +2,7 @@ from flask import Flask, request, redirect
 from twilio import twiml
 import os
 from twilio.twiml.messaging_response import MessagingResponse
-
+import bh_filter
 import urllib2
 import urllib
 import json
