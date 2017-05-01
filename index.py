@@ -76,7 +76,7 @@ def inbound_sms():
     # Confirm user's request - Then make a call to receiver_number
     else:
         index = int(message_body) - 1
-        artist = session['tracks_array'][index]
+        
         reply_string = "Gotcha! " + "We are sending your love to " + session["receiver_number"] + " . . ."
         resp.message(reply_string)
         return str(resp)
