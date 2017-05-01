@@ -2,11 +2,7 @@ from flask import Flask, request, redirect
 from twilio import twiml
 import os
 from twilio.twiml.messaging_response import MessagingResponse
-<<<<<<< HEAD
-import bh_filter
-=======
 import bhfilter
->>>>>>> f1bbb40274d997f56e5a19aaadb5f3662ab815a2
 import urllib2
 import urllib
 import json
@@ -27,17 +23,20 @@ def propose_tracks(a):
         return reply_false()
     else:
         for x in range(length):
-            if (x==3):
+            artist_name = content['tracks']['items'][x]['album']['artists'][0]['name']
+            if (x == 3):
                 break;
             else:
-                array.append("(" + str(x + 1)  +   ") " + content['tracks']['items'][x]['album']['artists'][0]['name'])
+                if (artist_name not in array):
+                    array.append(artist_name)
     return array
 
-def array_to_string(array):
-    string = ''
-    for x in array:
 
-        string += x + "\n"
+def array_to_string(array):
+    string = 'Who is your favorite artist?\n'
+    length = len(array)
+    for x in range(length):
+        string += "(" + str(x + 1) + ") " + array[x] + "\n"
     return string
 
 
@@ -50,15 +49,15 @@ app = Flask(__name__)
 def sms():
     number = request.form['From']
     message_body = request.form['Body']
-    z,zz = bhfilter.filterfunction(message_body)
+    phone_number, song_request = bhfilter.filterfunction(message_body)
 
 
     resp = MessagingResponse()
 
-    a_array = propose_tracks(zz)
+    a_array = propose_tracks(song_request)
     a_string = array_to_string(a_array)
 
-    resp.message("Sending to " + z + "\n" + a_string)
+    resp.message(a_string)
 
     return str(resp)
 
