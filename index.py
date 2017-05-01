@@ -2,7 +2,11 @@ from flask import Flask, request, redirect
 from twilio import twiml
 import os
 from twilio.twiml.messaging_response import MessagingResponse
+<<<<<<< HEAD
 import bh_filter
+=======
+import bhfilter
+>>>>>>> f1bbb40274d997f56e5a19aaadb5f3662ab815a2
 import urllib2
 import urllib
 import json
@@ -46,15 +50,15 @@ app = Flask(__name__)
 def sms():
     number = request.form['From']
     message_body = request.form['Body']
-
+    z,zz = bhfilter.filterfunction(message_body)
 
 
     resp = MessagingResponse()
 
-    a_array = propose_tracks("Love")
+    a_array = propose_tracks(zz)
     a_string = array_to_string(a_array)
 
-    resp.message(a_string)
+    resp.message("Sending to " + z + "\n" + a_string)
 
     return str(resp)
 
