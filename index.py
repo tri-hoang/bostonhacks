@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, session
+from flask import Flask, request, redirect, session, Response
 from twilio import twiml
 from twilio.rest import Client
 import os
@@ -8,9 +8,13 @@ import urllib2
 import urllib
 import json
 import spotdl
+from lxml import etree
 
-account_sid = "---"
-auth_token = "---"
+account_sid = ""
+auth_token  = ""
+MP3_PATH    = ""
+XML_PATH    = ""#Same server but at /mp3/
+FROM_NUM    = ""
 
 def propose_tracks(a):
     a = urllib.quote(a)
@@ -80,11 +84,25 @@ def inbound_sms():
         index = int(message_body) - 1
         
         reply_string = "Gotcha! " + "We are sending your love to " + session["receiver_number"] + " . . ."
-        link = "http://bhsd.trih.pw:8080/" + spotdl.getThis(session["song_request"])
-        print(link)
-        resp.message(reply_string + link)
+        file = spotdl.getThis(session["song_request"])
+
+        client = Client(account_sid, auth_token)
+        call = client.calls.create(to="+1" + session["receiver_number"],
+                           from_=FROM_NUM,
+                           url=XML_PATH + file + ".xml")
+        print(XML_PATH + file + ".xml")
+        print(call.sid)
+        resp.message(reply_string)
         return str(resp)
 
+@app.route('/mp3/<file>.xml', methods=['POST', 'GET'])
+def generate_xml(file):
+    root = etree.Element('Response')
+    child = etree.Element('Play')
+    child.text = MP3_PATH + file
+    root.append(child)
+    s = etree.tostring(root, pretty_print=True)
+    return Response(s, mimetype='text/xml')
 
 
 if __name__ == '__main__':
