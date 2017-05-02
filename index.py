@@ -1,16 +1,16 @@
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, session
 from twilio import twiml
 import os
 from twilio.twiml.messaging_response import MessagingResponse
-import bhfilter
+from bhfilter import *
 import urllib2
 import urllib
 import json
 
 
 
-def propose_tracks(a):
 
+def propose_tracks(a):
     a = urllib.quote(a)
     array = []
 
@@ -19,44 +19,69 @@ def propose_tracks(a):
     array = []
 
     length = len(content['tracks']['items'])
-    if length == 0:
-        return reply_false()
-    else:
-        for x in range(length):
-            if (x==3):
-                break;
-            else:
-                array.append("(" + str(x + 1)  +   ") " + content['tracks']['items'][x]['album']['artists'][0]['name'])
+    count = 0
+    num_artist = 0
+    while (count < length):
+        if (num_artist == 3):
+            break;
+        artist_name = content['tracks']['items'][count]['album']['artists'][0]['name']
+        if (artist_name not in array):
+            array.append(artist_name)
+            num_artist += 1
+        count += 1
     return array
 
-def array_to_string(array):
-    string = ''
-    for x in array:
 
-        string += x + "\n"
+def array_to_string(array):
+    string = 'Which one do you like?\n'
+    length = len(array)
+    for x in range(length):
+        string += "(" + str(x + 1) + ") " + array[x] + "\n"
     return string
 
 
 
-
+# Use session to store infos
 app = Flask(__name__)
-
+SECRET_KEY = 'a secret key'
+app.config.from_object(__name__)
 
 @app.route('/sms', methods=['POST'])
-def sms():
-    number = request.form['From']
+def inbound_sms():
+    sender_number = request.form['From']
     message_body = request.form['Body']
-    z,zz = bhfilter.filterfunction(message_body)
-
-
     resp = MessagingResponse()
 
-    a_array = propose_tracks(zz)
-    a_string = array_to_string(a_array)
+    # User requests song with phone number
+    if (len(message_body) != 1):
+        receiver_number, song_request = filterfunction(message_body)
+        tracks_array = propose_tracks(song_request)
 
-    resp.message("Sending to " + z + "\n" + a_string)
+        session["receiver_number"] = receiver_number
+        session["tracks_array"] = tracks_array
+        session["song_request"] = song_request
 
-    return str(resp)
+        # If it is not a working phone number // may need fix
+        if (len(receiver_number) < 10):
+            resp.message("Don't forget to type in bae's number!")
+
+        # If the song doesn't exist
+        elif (len(tracks_array) == 0):
+            resp.message("We cannot find the song you requested!")
+        else:
+            tracks_string = array_to_string(tracks_array)
+            resp.message(tracks_string)
+        return str(resp)
+
+    # Confirm user's request - Then make a call to receiver_number
+    else:
+        index = int(message_body) - 1
+        
+        reply_string = "Gotcha! " + "We are sending your love to " + session["receiver_number"] + " . . ."
+        resp.message(reply_string)
+        return str(resp)
+
+
 
 if __name__ == '__main__':
     app.run(host= '0.0.0.0')
