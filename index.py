@@ -6,30 +6,32 @@ from bhfilter import *
 import urllib2
 import urllib
 import json
+import requests
 
 
 
+def propose_tracks(track_title):
+    # rewrite --- using requests library to get info from spotify
+    search_url = 'https://api.spotify.com/v1/search'
+    params = {'q': track_title, 'type': 'track'}
+    track_info = requests.get(search_url, params=params).json()
+    artist_list = []
 
-def propose_tracks(a):
-    a = urllib.quote(a)
-    array = []
 
-    content = urllib2.urlopen("https://api.spotify.com/v1/search?q=" + a + "&type=track").read()
-    content = json.loads(content)
-    array = []
-
-    length = len(content['tracks']['items'])
+    length = len(track_info['tracks']['items'])
     count = 0
     num_artist = 0
     while (count < length):
         if (num_artist == 3):
             break;
-        artist_name = content['tracks']['items'][count]['album']['artists'][0]['name']
-        if (artist_name not in array):
-            array.append(artist_name)
+        artist_name = track_info['tracks']['items'][count]['album']['artists'][0]['name']
+        if (artist_name not in artist_list):
+            artist_list.append(artist_name)
             num_artist += 1
         count += 1
-    return array
+    return artist_list
+
+
 
 
 def array_to_string(array):
@@ -47,6 +49,7 @@ SECRET_KEY = 'a secret key'
 app.config.from_object(__name__)
 
 @app.route('/sms', methods=['POST'])
+# Handle SMS
 def inbound_sms():
     sender_number = request.form['From']
     message_body = request.form['Body']
@@ -76,10 +79,20 @@ def inbound_sms():
     # Confirm user's request - Then make a call to receiver_number
     else:
         index = int(message_body) - 1
-        
+
+
+        # NEED FIX MORE
+        session["index"] = index
+
+
+
         reply_string = "Gotcha! " + "We are sending your love to " + session["receiver_number"] + " . . ."
         resp.message(reply_string)
+
+
+
         return str(resp)
+
 
 
 
