@@ -1,20 +1,16 @@
+import urllib2, urllib, json, os, spotdl
 from flask import Flask, request, redirect, session, Response
 from twilio import twiml
 from twilio.rest import Client
-import os
 from twilio.twiml.messaging_response import MessagingResponse
 from bhfilter import *
-import urllib2
-import urllib
-import json
-import spotdl
 from lxml import etree
 
-account_sid = ""
-auth_token  = ""
-MP3_PATH    = ""
-XML_PATH    = ""#Same server but at /mp3/
-FROM_NUM    = ""
+account_sid = "---"
+auth_token  = "---"
+MP3_PATH    = "---"
+FROM_NUM    = "---"
+SECRET_KEY  = "---"
 
 def propose_tracks(a):
     a = urllib.quote(a)
@@ -49,7 +45,6 @@ def array_to_string(array):
 
 # Use session to store infos
 app = Flask(__name__)
-SECRET_KEY = 'a secret key'
 app.config.from_object(__name__)
 
 @app.route('/sms', methods=['POST'])
@@ -84,20 +79,23 @@ def inbound_sms():
         index = int(message_body) - 1
         
         reply_string = "Gotcha! " + "We are sending your love to " + session["receiver_number"] + " . . ."
-        file = spotdl.getThis(session["song_request"])
 
         client = Client(account_sid, auth_token)
-        call = client.calls.create(to="+1" + session["receiver_number"],
-                           from_=FROM_NUM,
-                           url=XML_PATH + file + ".xml")
-        print(XML_PATH + file + ".xml")
+        file = spotdl.getThis(session["song_request"] + " by " + session["tracks_array"][index])
+        path = request.url[:-3] + "xml/"
+        call = client.calls.create(to="+1" + session["receiver_number"], from_=FROM_NUM, url=path + file + ".xml")
+        print(path + file + ".xml")
         print(call.sid)
         resp.message(reply_string)
         return str(resp)
 
-@app.route('/mp3/<file>.xml', methods=['POST', 'GET'])
+@app.route('/xml/<file>.xml', methods=['POST', 'GET'])
 def generate_xml(file):
     root = etree.Element('Response')
+    child = etree.Element('Say')
+    child.text = "someone sent you this song"
+    child.attrib['voice'] = "alice"
+    root.append(child)
     child = etree.Element('Play')
     child.text = MP3_PATH + file
     root.append(child)
