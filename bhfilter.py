@@ -1,9 +1,6 @@
 import re
 def filterfunction(string):
-	text=re.sub("\d","",string)
-	text2=re.sub("\(\)","",text)
-	text3=re.sub("-","",text2).lstrip()
-	c=re.findall(r'[a-zA-Z]',string)
-	r=re.findall(r'\d',string)
-	result=''.join(r)
-	return result,text3
+	search = re.findall(r"\(?\b[2-9][0-9]{2}\)?[-. ]?[2-9][0-9]{2}[-. ]?[0-9]{4}\b", string)
+	phonenum = re.sub(r"[^\w]", "", search[0])
+	song = string.replace(search[0], "").lstrip()
+	return phonenum,song
