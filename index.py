@@ -1,10 +1,12 @@
-import urllib2, urllib, json, os, spotdl
+import urllib2, urllib, json, os, spotdl, sys
 from flask import Flask, request, redirect, session, Response
 from twilio import twiml
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
 from bhfilter import *
 from lxml import etree
+reload(sys)  
+sys.setdefaultencoding('utf8')
 
 account_sid = "---"
 auth_token  = "---"
@@ -83,7 +85,12 @@ def inbound_sms():
         client = Client(account_sid, auth_token)
         file = spotdl.getThis(session["song_request"] + " by " + session["tracks_array"][index])
         path = request.url[:-3] + "xml/"
-        call = client.calls.create(to="+1" + session["receiver_number"], from_=FROM_NUM, url=path + file + ".xml")
+        call = client.calls.create(\
+            to="+1" + session["receiver_number"],\
+             from_=FROM_NUM,\
+             url=path\
+              + file.encode('utf-8')\
+               + ".xml".encode('utf-8'))
         print(path + file + ".xml")
         print(call.sid)
         resp.message(reply_string)

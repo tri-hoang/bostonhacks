@@ -16,6 +16,7 @@ import pafy
 import os
 import argparse
 import sys
+import base64
 #import spotipy.util as util
 
 eyed3.log.setLevel("ERROR")
@@ -94,6 +95,7 @@ def fixSong():
 	audiofile.tag.images.set(3,albumart,"image/jpeg")
 	audiofile.tag.save(version=(2,3,0))
 
+
 def playSong():
 	if not title == '':
 		if not os.name == 'nt':
@@ -103,15 +105,17 @@ def playSong():
 			os.system('start ' + 'Music/' + title + extension)
 
 def convertSong():
+	global title
+	title = title.replace('`', '')
 	if not os.name == 'nt':
 		os.system('avconv -loglevel 0 -i "' + 'Music/' + title + '.m4a" -ab 192k "' + 'Music/' + title + '.mp3"')
 	else:
 		os.system('Scripts\\avconv.exe -loglevel 0 -i "' + 'Music/' + title + '.m4a" -ab 192k "' + 'Music/' + title + '.mp3"')
-	os.remove('Music/' + title + '.m4a')
+	# os.remove('Music/' + title + '.m4a')
 
 def downloadSong():
 	a = video.getbestaudio(preftype="m4a")
-	a.download(filepath="Music/" + title + ".m4a", quiet=True)
+	a.download(filepath="Music/" + title.replace('`', '') + ".m4a", quiet=True)
 
 def isSpotify():
 	if (len(raw_song) == 22 and raw_song.replace(" ", "%20") == raw_song) or (raw_song.find('spotify') > -1):
@@ -138,7 +142,7 @@ header = {'User-agent': choice(headers)}
 
 def getThis(request):
 	global raw_song
-	raw_song = request
+	raw_song = request.decode('utf-8').encode('utf-8')
 	trackPredict()
 	searchYT(number=None)
 	if not checkExists(islist=False):
